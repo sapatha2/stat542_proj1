@@ -157,22 +157,62 @@ myData$SalePrice=log(train$SalePrice)
 myData$LotArea=sqrt(myData$LotArea)
 myData$MasVnrArea=sqrt(myData$MasVnrArea)
 
+# Year built as numerical
+myData$YearBuilt=as.numeric(myData$YearBuilt)
+
+# Remove Utilities and Street
+myData=subset(myData,select=-c(Utilities,Street))
+
 # Break into traindata and testdata
 ntrain=round(nrow(myData)*0.75)
 train.id=sample(1:nrow(myData), ntrain)
 traindata=myData[train.id,]
 testdata=myData[-train.id,]
 
-print(summary(traindata$Condition2))
-print(summary(testdata$Condition2))
+# See if there are any new levels!
+# Loop over all predictors
+for(i in 1:ncol(traindata)){
+  # Only consider categorical ones
+  if(is.factor(traindata[,i])){
+    tt <- table(traindata[,i]) # Most frequent level
+    #Loop over all levels of the categorical predcitor
+    for(l in levels(traindata[,i])){
+      # If the level is not completely ommited, and is occupied in the test but not train set 
+      if(!is.na(summary(traindata[,i])[l])){
+        if(summary(traindata[,i])[l]==0){
+          if(summary(testdata[,i])[l]!=0){
+            # Before: There is a discrepancy between the following printouts
+            # print(summary(testdata[,i])[l])
+            # print(summary(traindata[,i])[l])
+            # If satisfied, just replace it with the most common category!
+            testdata[,i][testdata[,i]==l]=names(tt[which.max(tt)])
+            # After: The discrepancy is gone!
+            # print(summary(testdata[,i])[l])
+            # print(summary(traindata[,i])[l])
+          }
+        }
+      }else{
+        # If the level isn't defined in the train but is in the test data
+        if(!is.na(summary(testdata[,i])[l])){
+          # If satisfied, just replace it with the most common category!
+          testdata[,i][testdata[,i]==l]=names(tt[which.max(tt)])
+        }
+      }
+    }
+  }
+}
 
 # Do a simple linear regression
 # Typical errors: 
-# 1) The break-up above can lead to categories that have no filling at all!
+# 1) The break-up above can lead to categories that have no flling at all!
 #    This leads to the "contrasts can be applied only to factors with 2 or more levels!"
 # 2) There are categories occupied in the test data, but not in the training data!
 #    This leads to "___Categorical Predictor___ has new levels __{x}__"
 #    I have seen this for ___Categorical Predictor___=Condition2,OverallQual,YearBuilt
 
-lmfit=lm(SalePrice~.,data=traindata)
-predict(lmfit,newdata=testdata)
+# After the additional cleaning this works fine. You get a rank-deficiency error because 
+# some of the categorical levels are linearly dependent when you do the dummy coding!
+
+lmfit=lm(traindata$SalePrice~.,data=traindata)
+Ytest.pred=predict(lmfit,newdata=testdata)
+print(summary(lmfit))
