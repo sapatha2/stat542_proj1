@@ -3,7 +3,6 @@
 
 # Impute raw data using the technique described here:
 # https://www.kaggle.com/clustersrus/house-prices-advanced-regression-techniques/house-prices-dealing-with-the-missing-data/notebook
-setwd("/Users/shiveshpathak/Documents/School Work/STAT 542/Rcode/stat542_proj1/")
 train <- read.csv("./train.csv",stringsAsFactors=T)
 SalePrice = train$SalePrice
 test <- read.csv("./test.csv",stringsAsFactors=T)
