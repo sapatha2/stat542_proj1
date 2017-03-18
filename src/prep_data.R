@@ -151,23 +151,15 @@ df[,sapply(df,function(x){!(is.numeric(x))}) ]<-as.data.frame(apply(df[,sapply(d
 # Inspired by https://www.kaggle.com/meikegw/house-prices-advanced-regression-techniques/filling-up-missing-values
 df$LotFrontage[is.na(df$LotFrontage)]=sqrt(df$LotArea)[is.na(df$LotFrontage)]
 
-# Finally get the training data back and transform
-myData=df[1:nrow(train),]
-myData$SalePrice=log(train$SalePrice)
-myData$LotArea=sqrt(myData$LotArea)
-myData$MasVnrArea=sqrt(myData$MasVnrArea)
+df$LotArea=sqrt(df$LotArea)
+df$MasVnrArea=sqrt(df$MasVnrArea)
+df$YearBuilt=as.numeric(df$YearBuilt)
+df=subset(df,select=-c(Utilities,Street))
 
-# Year built as numerical
-myData$YearBuilt=as.numeric(myData$YearBuilt)
-
-# Remove Utilities and Street
-myData=subset(myData,select=-c(Utilities,Street))
-
-# Break into traindata and testdata
-ntrain=round(nrow(myData)*0.75)
-train.id=sample(1:nrow(myData), ntrain)
-traindata=myData[train.id,]
-testdata=myData[-train.id,]
+ind=1:nrow(train)
+traindata=df[ind,]
+traindata$SalePrice=log(train$SalePrice)
+testdata=df[-ind,]
 
 # See if there are any new levels!
 # Loop over all predictors
